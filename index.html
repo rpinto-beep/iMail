@@ -30,18 +30,28 @@
                     <div class="tab-bar">
                         <button class="tab-btn active" onclick="switchTab('main')">📧 Redactar Correo</button>
                         <button class="tab-btn" onclick="switchTab('config')">⚙️ Configuración</button>
+                        <button class="tab-btn" onclick="switchTab('accounts')">👥 Agregar Cuentas</button>
                     </div>
 
                     <div class="window-content">
                         
                         <div id="tab-main" class="tab-pane active">
                             
-                            <div class="control-group">
-                                <label class="mac-label">Remitente (De:):</label>
-                                <select id="fromEmail" class="mac-input">
-                                    <option value="">(Conecta para cargar cuentas...)</option>
-                                </select>
-                                <div style="font-size:11px; color:#666; margin-top:3px;">* Muestra tu cuenta principal y alias verificados.</div>
+                            <div class="control-group" style="background: rgba(255,255,255,0.5); padding:10px; border:1px solid #ccc; border-radius:5px;">
+                                <label class="mac-label" style="margin-top:0;">Configuración de Envío:</label>
+                                
+                                <div style="margin-bottom:10px;">
+                                    <span style="font-size:13px; font-weight:600;">Seleccionar Cuenta:</span>
+                                    <select id="fromEmail" class="mac-input" style="margin-top:5px;" onchange="updateSenderName()">
+                                        <option value="">(Conecta para cargar cuentas...)</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <span style="font-size:13px; font-weight:600;">Nombre a Mostrar (Auto):</span>
+                                    <input type="text" id="fromName" class="mac-input" style="margin-top:5px;" placeholder="Se cargará automáticamente...">
+                                    <div style="font-size:10px; color:#555; margin-top:3px;">* Se obtiene de tu configuración de Gmail. Puedes editarlo si gustas.</div>
+                                </div>
                             </div>
 
                             <div class="control-group">
@@ -111,10 +121,9 @@
                             <h3 class="config-title">Configuración del Servidor</h3>
                             
                             <div id="step-1" class="step-box wizard-step">
-                                <p style="margin-bottom:5px;"><b>Paso 1:</b> Crea el Script.</p>
+                                <p style="margin-bottom:5px;"><b>Paso 1:</b> Nuevo Proyecto.</p>
                                 <div style="font-size:11px; margin-left:10px;">
-                                    1. Ve a <a href="https://script.google.com/home" target="_blank" style="color:#00457a; font-weight:bold; text-decoration:none;">script.google.com</a>.<br>
-                                    2. Clic en <b>"Nuevo proyecto"</b>.
+                                    Ve a <b>script.google.com</b> y haz clic en el botón <b>+ Nuevo proyecto</b>.
                                 </div>
                                 <img src="paso 1.png" class="wizard-img" onclick="expandImage(this.src)">
                                 <div class="wizard-nav right">
@@ -123,9 +132,9 @@
                             </div>
 
                             <div id="step-2" class="step-box wizard-step" style="display:none;">
-                                <p style="margin-bottom:5px;"><b>Paso 2:</b> Copia y pega el código.</p>
+                                <p style="margin-bottom:5px;"><b>Paso 2:</b> Pegar Código.</p>
                                 <div style="font-size:11px; margin-left:10px; margin-bottom:5px;">
-                                    Borra el código por defecto y pega este:
+                                    Borra todo y pega este código exacto:
                                 </div>
                                 <textarea class="code-box" readonly>
 function doPost(e) {
@@ -135,28 +144,45 @@ function doPost(e) {
     var data = JSON.parse(e.postData.contents);
     var currentUser = Session.getEffectiveUser().getEmail();
     
-    // Acción: Check Quota y Obtener Alias
+    // Acción: Check Quota y Obtener Alias con NOMBRES
     if (data.action === "check_quota") {
       var remaining = MailApp.getRemainingDailyQuota();
-      // Obtener alias configurados en Gmail
-      var aliases = GmailApp.getAliases();
-      // Agregar el correo principal al inicio de la lista
-      aliases.unshift(currentUser);
+      var aliasesList = [];
+
+      try {
+        // Intenta obtener configuración completa (Requiere Servicio Gmail API activado)
+        var response = Gmail.Users.Settings.SendAs.list('me');
+        if (response.sendAs) {
+           aliasesList = response.sendAs.map(function(a) {
+              return { email: a.sendAsEmail, name: a.displayName };
+           });
+        }
+      } catch (err) {
+        // Fallback si no activaron el servicio: Solo emails
+        var raw = GmailApp.getAliases();
+        raw.unshift(currentUser);
+        aliasesList = raw.map(function(e) { return { email: e, name: "" }; });
+      }
       
       output.setContent(JSON.stringify({ 
         status: "success", 
         quota: remaining, 
         user: currentUser,
-        aliases: aliases // Devolvemos la lista al frontend
+        aliases: aliasesList 
       }));
       return output;
     }
     
     var options = { htmlBody: data.html };
     
-    // Configuración de Alias (Remitente)
+    // 1. Configuración de Alias
     if (data.fromAlias && data.fromAlias !== "") {
       options.from = data.fromAlias;
+    }
+    
+    // 2. Configuración de Nombre
+    if (data.fromName && data.fromName !== "") {
+      options.name = data.fromName;
     }
 
     if (data.attachments && data.attachments.length > 0) {
@@ -189,11 +215,12 @@ function doPost(e) {
                             </div>
 
                             <div id="step-3" class="step-box wizard-step" style="display:none;">
-                                <p style="margin-bottom:5px;"><b>Paso 3a:</b> Implementar.</p>
+                                <p style="margin-bottom:5px;"><b>Paso 3:</b> Activar Servicio Gmail.</p>
                                 <ul style="font-size:11px; margin:0; padding-left:20px; color:#333;">
-                                    <li>Botón azul <b>Implementar</b> &rarr; <b>Nueva implementación</b>.</li>
+                                    <li>Clic en el <b>"+"</b> al lado de <b>Servicios</b>.</li>
+                                    <li>Selecciona <b>Gmail API</b> y pulsa <b>Agregar</b>.</li>
                                 </ul>
-                                <img src="paso 3.1.png" class="wizard-img" onclick="expandImage(this.src)">
+                                <img src="paso 3.png" class="wizard-img" onclick="expandImage(this.src)">
                                 <div class="wizard-nav">
                                     <button class="mac-btn-small" onclick="nextStep(2)">&larr; Atrás</button>
                                     <button class="mac-btn-small" onclick="nextStep(4)">Siguiente &rarr;</button>
@@ -201,11 +228,11 @@ function doPost(e) {
                             </div>
 
                             <div id="step-4" class="step-box wizard-step" style="display:none;">
-                                <p style="margin-bottom:5px;"><b>Paso 3b:</b> Tipo de App.</p>
+                                <p style="margin-bottom:5px;"><b>Paso 4:</b> Implementar.</p>
                                 <ul style="font-size:11px; margin:0; padding-left:20px; color:#333;">
-                                    <li>Clic en la tuerca (<span style="font-size:12px;">⚙️</span>) &rarr; Selecciona <b>Aplicación web</b>.</li>
+                                    <li>Botón azul <b>Implementar</b> &rarr; <b>Nueva implementación</b>.</li>
                                 </ul>
-                                <img src="paso 3.2.png" class="wizard-img" onclick="expandImage(this.src)">
+                                <img src="paso 4.png" class="wizard-img" onclick="expandImage(this.src)">
                                 <div class="wizard-nav">
                                     <button class="mac-btn-small" onclick="nextStep(3)">&larr; Atrás</button>
                                     <button class="mac-btn-small" onclick="nextStep(5)">Siguiente &rarr;</button>
@@ -213,14 +240,11 @@ function doPost(e) {
                             </div>
 
                             <div id="step-5" class="step-box wizard-step" style="display:none;">
-                                <p style="margin-bottom:5px;"><b>Paso 3c:</b> Configuración de acceso.</p>
+                                <p style="margin-bottom:5px;"><b>Paso 5:</b> Tipo de App.</p>
                                 <ul style="font-size:11px; margin:0; padding-left:20px; color:#333;">
-                                    <li><b>Descripción:</b> iMail.</li>
-                                    <li><b>Ejecutar como:</b> Yo.</li>
-                                    <li><b>Quién tiene acceso:</b> <span style="background:#ffffcc; padding:0 3px; border:1px solid #eec;">Cualquiera</span>.</li>
-                                    <li>Clic en <b>Implementar</b>.</li>
+                                    <li>Clic en la tuerca (<span style="font-size:12px;">⚙️</span>) &rarr; Selecciona <b>Aplicación web</b>.</li>
                                 </ul>
-                                <img src="paso 3.3.jpg" class="wizard-img" onclick="expandImage(this.src)">
+                                <img src="paso 5.png" class="wizard-img" onclick="expandImage(this.src)">
                                 <div class="wizard-nav">
                                     <button class="mac-btn-small" onclick="nextStep(4)">&larr; Atrás</button>
                                     <button class="mac-btn-small" onclick="nextStep(6)">Siguiente &rarr;</button>
@@ -228,11 +252,14 @@ function doPost(e) {
                             </div>
 
                             <div id="step-6" class="step-box wizard-step" style="display:none;">
-                                <p style="margin-bottom:5px;"><b>Paso 4a:</b> Autorización.</p>
-                                <div style="font-size:11px; margin-left:10px;">
-                                    Google pedirá permisos. Haz clic en <b>Autorizar acceso</b>.
-                                </div>
-                                <img src="paso 4.png" class="wizard-img" onclick="expandImage(this.src)">
+                                <p style="margin-bottom:5px;"><b>Paso 6:</b> Configuración de acceso.</p>
+                                <ul style="font-size:11px; margin:0; padding-left:20px; color:#333;">
+                                    <li><b>Descripción:</b> iMail.</li>
+                                    <li><b>Ejecutar como:</b> Yo.</li>
+                                    <li><b>Quién tiene acceso:</b> <span style="background:#ffffcc; padding:0 3px; border:1px solid #eec;">Cualquiera</span>.</li>
+                                    <li>Clic en <b>Implementar</b>.</li>
+                                </ul>
+                                <img src="paso 6.png" class="wizard-img" onclick="expandImage(this.src)">
                                 <div class="wizard-nav">
                                     <button class="mac-btn-small" onclick="nextStep(5)">&larr; Atrás</button>
                                     <button class="mac-btn-small" onclick="nextStep(7)">Siguiente &rarr;</button>
@@ -240,11 +267,11 @@ function doPost(e) {
                             </div>
 
                             <div id="step-7" class="step-box wizard-step" style="display:none;">
-                                <p style="margin-bottom:5px;"><b>Paso 4b:</b> Login.</p>
+                                <p style="margin-bottom:5px;"><b>Paso 7:</b> Autorización.</p>
                                 <div style="font-size:11px; margin-left:10px;">
-                                    Selecciona tu cuenta de Google.
+                                    Haz clic en <b>Autorizar acceso</b>.
                                 </div>
-                                <img src="paso 4.1.png" class="wizard-img" onclick="expandImage(this.src)">
+                                <img src="paso 7.png" class="wizard-img" onclick="expandImage(this.src)">
                                 <div class="wizard-nav">
                                     <button class="mac-btn-small" onclick="nextStep(6)">&larr; Atrás</button>
                                     <button class="mac-btn-small" onclick="nextStep(8)">Siguiente &rarr;</button>
@@ -252,11 +279,11 @@ function doPost(e) {
                             </div>
 
                             <div id="step-8" class="step-box wizard-step" style="display:none;">
-                                <p style="margin-bottom:5px;"><b>Paso 4c:</b> Permitir.</p>
+                                <p style="margin-bottom:5px;"><b>Paso 8:</b> Login.</p>
                                 <div style="font-size:11px; margin-left:10px;">
-                                    Clic en <b>Allow</b> (Permitir) o Continue.
+                                    Selecciona tu cuenta de Google.
                                 </div>
-                                <img src="paso 4.2.png" class="wizard-img" onclick="expandImage(this.src)">
+                                <img src="paso 8.png" class="wizard-img" onclick="expandImage(this.src)">
                                 <div class="wizard-nav">
                                     <button class="mac-btn-small" onclick="nextStep(7)">&larr; Atrás</button>
                                     <button class="mac-btn-small" onclick="nextStep(9)">Siguiente &rarr;</button>
@@ -264,19 +291,31 @@ function doPost(e) {
                             </div>
 
                             <div id="step-9" class="step-box wizard-step" style="display:none;">
-                                <p style="margin-bottom:5px;"><b>Paso 4 (Final):</b> Copiar URL.</p>
+                                <p style="margin-bottom:5px;"><b>Paso 9:</b> Permisos (IMPORTANTE).</p>
                                 <div style="font-size:11px; margin-left:10px;">
-                                    Copia la URL de la aplicación web generada.
+                                    Marca la casilla <b>"Select all"</b> (Seleccionar todo) y clic en <b>Continue</b>.
                                 </div>
-                                <img src="paso 4.3.png" class="wizard-img" onclick="expandImage(this.src)">
+                                <img src="paso 9.png" class="wizard-img" onclick="expandImage(this.src)">
                                 <div class="wizard-nav">
                                     <button class="mac-btn-small" onclick="nextStep(8)">&larr; Atrás</button>
-                                    <button class="mac-btn-small" onclick="nextStep(10)">Finalizar &rarr;</button>
+                                    <button class="mac-btn-small" onclick="nextStep(10)">Siguiente &rarr;</button>
                                 </div>
                             </div>
 
-                            <div id="step-10" class="step-box wizard-step" style="background:#e8f4fa; border-color:#a6cbd9; display:none;">
-                                <p style="margin-bottom:5px; color:#00457a;"><b>Paso 5:</b> Conectar.</p>
+                            <div id="step-10" class="step-box wizard-step" style="display:none;">
+                                <p style="margin-bottom:5px;"><b>Paso 10:</b> Copiar URL.</p>
+                                <div style="font-size:11px; margin-left:10px;">
+                                    Copia la URL de la aplicación web (la que termina en <b>/exec</b>).
+                                </div>
+                                <img src="paso 10.png" class="wizard-img" onclick="expandImage(this.src)">
+                                <div class="wizard-nav">
+                                    <button class="mac-btn-small" onclick="nextStep(9)">&larr; Atrás</button>
+                                    <button class="mac-btn-small" onclick="nextStep(11)">Finalizar &rarr;</button>
+                                </div>
+                            </div>
+
+                            <div id="step-11" class="step-box wizard-step" style="background:#e8f4fa; border-color:#a6cbd9; display:none;">
+                                <p style="margin-bottom:5px; color:#00457a;"><b>Paso Final:</b> Conectar.</p>
                                 <div style="font-size:11px; margin-left:10px; margin-bottom:5px;">
                                     Pega la URL de la aplicación web aquí:
                                 </div>
@@ -287,10 +326,63 @@ function doPost(e) {
                                     <button class="mac-btn-primary" style="width:auto; padding: 4px 15px; font-size:11px;" onclick="saveConfig()">Guardar y Conectar</button>
                                 </div>
                                 <div class="wizard-nav">
-                                    <button class="mac-btn-small" onclick="nextStep(9)">&larr; Atrás</button>
+                                    <button class="mac-btn-small" onclick="nextStep(10)">&larr; Atrás</button>
                                 </div>
                             </div>
 
+                        </div>
+
+                        <div id="tab-accounts" class="tab-pane">
+                            <h3 class="config-title">Agregar Correos (Alias)</h3>
+                            
+                            <div id="account-step-1" class="step-box account-wizard-step">
+                                <p style="margin-bottom:5px;"><b>Paso 1:</b> Configuración Gmail.</p>
+                                <div style="font-size:11px; margin-left:10px;">
+                                    Ve a tu Gmail, clic en la tuerca <b>⚙️</b> y luego en <b>Ver toda la configuración</b>.
+                                </div>
+                                <img src="ppaso 1.png" class="wizard-img" onclick="expandImage(this.src)">
+                                <div class="wizard-nav right">
+                                    <button class="mac-btn-small" onclick="nextAccountStep(2)">Siguiente &rarr;</button>
+                                </div>
+                            </div>
+
+                            <div id="account-step-2" class="step-box account-wizard-step" style="display:none;">
+                                <p style="margin-bottom:5px;"><b>Paso 2:</b> Pestaña Cuentas.</p>
+                                <div style="font-size:11px; margin-left:10px;">
+                                    Ve a <b>Cuentas</b>. En la sección "Enviar mensaje como", clic en <b>Agregar otra dirección...</b>
+                                </div>
+                                <img src="ppaso 2.png" class="wizard-img" onclick="expandImage(this.src)">
+                                <div class="wizard-nav">
+                                    <button class="mac-btn-small" onclick="nextAccountStep(1)">&larr; Atrás</button>
+                                    <button class="mac-btn-small" onclick="nextAccountStep(3)">Siguiente &rarr;</button>
+                                </div>
+                            </div>
+
+                            <div id="account-step-3" class="step-box account-wizard-step" style="display:none;">
+                                <p style="margin-bottom:5px;"><b>Paso 3:</b> Datos del Alias.</p>
+                                <div style="font-size:11px; margin-left:10px;">
+                                    1. Escribe el <b>Nombre</b> (ej: Juan Perez) y el <b>Correo</b>.<br>
+                                    2. Deja marcada la casilla <b>"Tratarlo como un alias"</b>.<br>
+                                    3. Clic en Paso siguiente.
+                                </div>
+                                <img src="ppaso 3.png" class="wizard-img" onclick="expandImage(this.src)">
+                                <div class="wizard-nav">
+                                    <button class="mac-btn-small" onclick="nextAccountStep(2)">&larr; Atrás</button>
+                                    <button class="mac-btn-small" onclick="nextAccountStep(4)">Siguiente &rarr;</button>
+                                </div>
+                            </div>
+
+                            <div id="account-step-4" class="step-box account-wizard-step" style="display:none;">
+                                <p style="margin-bottom:5px;"><b>Paso 4:</b> Verificación.</p>
+                                <div style="font-size:11px; margin-left:10px;">
+                                    Clic en <b>Enviar verificación</b>. Revisa ese correo, copia el código y valídalo.
+                                </div>
+                                <img src="ppaso 4.png" class="wizard-img" onclick="expandImage(this.src)">
+                                <div class="wizard-nav">
+                                    <button class="mac-btn-small" onclick="nextAccountStep(3)">&larr; Atrás</button>
+                                    <button class="mac-btn-small" onclick="switchTab('main')">Ir a Redactar</button>
+                                </div>
+                            </div>
                         </div>
 
                     </div>

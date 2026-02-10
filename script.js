@@ -5,6 +5,8 @@ let footerImageData = null;
 
 // Variables para el control de quota local
 let currentVisualQuota = 0;
+// Variable para almacenar la info de los alias (Email y Nombre)
+let accountData = [];
 
 window.onload = function() { loadSavedConfig(); };
 
@@ -69,7 +71,7 @@ function loadSavedConfig() {
     }
 }
 
-// --- WIZARD CONFIGURACIÓN ---
+// --- WIZARD CONFIGURACIÓN SERVIDOR ---
 function nextStep(stepId) {
     // Ocultar todos los pasos del wizard
     const steps = document.querySelectorAll('.wizard-step');
@@ -78,6 +80,17 @@ function nextStep(stepId) {
     // Mostrar el paso solicitado
     document.getElementById('step-' + stepId).style.display = 'block';
 }
+
+// --- WIZARD AGREGAR CUENTAS (NUEVO) ---
+function nextAccountStep(stepId) {
+    // Ocultar pasos del wizard de cuentas
+    const steps = document.querySelectorAll('.account-wizard-step');
+    steps.forEach(s => s.style.display = 'none');
+    
+    // Mostrar el paso solicitado
+    document.getElementById('account-step-' + stepId).style.display = 'block';
+}
+
 
 // --- CONEXIÓN ---
 async function checkConnection(showUi) {
@@ -105,15 +118,25 @@ async function checkConnection(showUi) {
             document.getElementById('status-bar').innerText = "Conectado como: " + userDisplay.innerText;
 
             // --- LLENAR SELECTOR DE ALIAS ---
-            aliasSelect.innerHTML = ""; // Limpiar
+            aliasSelect.innerHTML = ""; 
+            accountData = []; // Reiniciamos datos guardados
+
             if(result.aliases && result.aliases.length > 0) {
-                // Si el script devolvió alias
-                result.aliases.forEach(alias => {
+                // Guardamos la lista completa (email y nombre)
+                accountData = result.aliases;
+                
+                result.aliases.forEach(account => {
                     const opt = document.createElement('option');
-                    opt.value = alias;
-                    opt.innerText = alias;
+                    opt.value = account.email;
+                    // Mostramos "Nombre <email>" si el nombre existe, sino solo email
+                    const displayName = account.name ? `${account.name} <${account.email}>` : account.email;
+                    opt.innerText = displayName;
                     aliasSelect.appendChild(opt);
                 });
+                
+                // Ejecutamos la actualización del nombre para el primer elemento seleccionado por defecto
+                updateSenderName();
+
             } else {
                 // Si no hay alias o no se actualizó el script, poner solo el principal
                 const opt = document.createElement('option');
@@ -135,6 +158,21 @@ async function checkConnection(showUi) {
             hideLoader(); 
             showMessage("Error", "No se pudo conectar con el Script.", "❌"); 
         }
+    }
+}
+
+// --- FUNCIÓN NUEVA: ACTUALIZAR NOMBRE AL SELECCIONAR CORREO ---
+function updateSenderName() {
+    const selectedEmail = document.getElementById('fromEmail').value;
+    const nameInput = document.getElementById('fromName');
+    
+    // Buscamos en los datos guardados el objeto que coincida con el email
+    const account = accountData.find(acc => acc.email === selectedEmail);
+    
+    if (account && account.name) {
+        nameInput.value = account.name; // Rellenar automáticamente
+    } else {
+        nameInput.value = ""; // Dejar vacío si no tiene nombre configurado
     }
 }
 
@@ -217,14 +255,22 @@ function renderFileIcon(fileName) {
     container.appendChild(chip);
 }
 
-// --- UI ---
+// --- UI (ACTUALIZADA PARA 3 TABS) ---
 function switchTab(t) {
+    // 1. Quitar activo de todos los botones y paneles
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-    const idx = t === 'main' ? 0 : 1;
-    document.querySelectorAll('.tab-btn')[idx].classList.add('active');
+    
+    // 2. Activar panel específico
     document.getElementById('tab-' + t).classList.add('active');
+    
+    // 3. Activar botón correspondiente (Lógica manual segura)
+    const btns = document.querySelectorAll('.tab-btn');
+    if(t === 'main') btns[0].classList.add('active');
+    else if(t === 'config') btns[1].classList.add('active');
+    else if(t === 'accounts') btns[2].classList.add('active');
 }
+
 function toggleFooterMode() {
     const t = document.querySelector('input[name="footerType"]:checked').value;
     document.getElementById('footer-text-box').style.display = (t === 'text') ? 'block' : 'none';
@@ -247,7 +293,8 @@ async function startSending() {
     const footerType = document.querySelector('input[name="footerType"]:checked').value;
     const quotaDisplay = document.getElementById('quota-count');
     const whatsappNumber = document.getElementById('whatsappNumber').value.trim();
-    const fromEmail = document.getElementById('fromEmail').value.trim(); // NUEVO: Remitente Select
+    const fromEmail = document.getElementById('fromEmail').value.trim(); // Remitente
+    const fromName = document.getElementById('fromName').value.trim();   // Nombre Opcional
 
     if (!currentScriptUrl) { showMessage("Error", "Configura la URL primero.", "⚙️"); switchTab('config'); return; }
     if (emailsList.length === 0) { showMessage("Error", "Falta la lista de correos.", "📭"); return; }
@@ -287,8 +334,9 @@ async function startSending() {
             to: emailsList[i], 
             subject: subject, 
             html: finalHtml,
-            attachments: attachmentsList, // Nueva estructura
-            fromAlias: fromEmail // Enviamos el remitente al script
+            attachments: attachmentsList,
+            fromAlias: fromEmail, // Enviamos el remitente
+            fromName: fromName    // Enviamos el nombre forzado
         };
 
         try {
@@ -307,9 +355,7 @@ async function startSending() {
                     throw new Error("Límite diario alcanzado");
                 }
             } else if (res.status === "error") {
-                // Si falla por el alias (ej: no configurado), loguearlo o detener
                 console.error("Error envío:", res.message);
-                // Opcional: mostrar error si falla el primero para avisar del alias
                 if(i===0 && res.message.includes("From address")) {
                      throw new Error("El remitente no está configurado como alias en Gmail.");
                 }
