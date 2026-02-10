@@ -1,0 +1,300 @@
+/* Importar fuente Rajdhani (Estilo UI PlayStation 2 / Tech 2000s) */
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&display=swap');
+
+body {
+    background-color: #333;
+    /* --- CONFIGURACIÓN DE IMAGEN DE FONDO --- */
+    background-image: url('fondo.jpg'); /* <--- Asegúrate que tu imagen tenga este nombre */
+    background-size: cover;       /* Cubre toda la pantalla sin deformarse */
+    background-position: center;  /* Centra la imagen */
+    background-repeat: no-repeat; /* No repetir */
+    background-attachment: fixed; /* El fondo se queda fijo al hacer scroll */
+    /* ---------------------------------------- */
+
+    display: flex; justify-content: center; align-items: center;
+    min-height: 100vh; 
+    /* Fuente Base estilo PS2 Browser */
+    font-family: 'Rajdhani', sans-serif; 
+    font-size: 16px; 
+    font-weight: 500;
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* --- CARCASA iMAC --- */
+.imac-shell {
+    background: #0095B6;
+    background-image: repeating-linear-gradient(transparent, transparent 2px, rgba(0,0,0,0.1) 3px, rgba(0,0,0,0.1) 4px);
+    padding: 35px; border-radius: 40px 40px 25px 25px;
+    box-shadow: inset 0 0 20px rgba(255,255,255,0.4), 0 20px 50px rgba(0,0,0,0.6);
+    width: 900px; position: relative; text-align: center; z-index: 1;
+}
+.imac-handle {
+    width: 160px; height: 35px; background: rgba(255,255,255,0.25);
+    border-radius: 15px 15px 0 0; margin: -55px auto 20px auto;
+    border: 3px solid rgba(255,255,255,0.3); border-bottom: none;
+    box-shadow: inset 0 5px 10px rgba(0,0,0,0.1);
+}
+.monitor-bezel { background: #111; padding: 20px; border-radius: 20px; box-shadow: inset 0 0 15px #000; }
+.screen-glass {
+    background: #e0e0e0; border-radius: 8px; padding: 0;
+    overflow: hidden; height: 580px; position: relative;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.3);
+}
+.screen-glass::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 180px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.15) 0%, transparent 100%); 
+    pointer-events: none; z-index: 10; border-radius: 8px 8px 0 0;
+}
+
+/* --- LOGO --- */
+.custom-logo-area { margin-top: 15px; display: flex; justify-content: center; align-items: center; height: 60px; }
+.effectiva-logo-img {
+    width: 50px; height: auto; opacity: 0.85; 
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); cursor: pointer;
+}
+.effectiva-logo-img:hover { opacity: 1; transform: scale(1.2); filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.6)); }
+
+/* --- VENTANA --- */
+.macos-window {
+    background: #e8e8e8; width: 100%; height: 100%; display: flex; flex-direction: column; text-align: left;
+}
+.window-header {
+    background: linear-gradient(to bottom, #f9f9f9 0%, #dcdcdc 50%, #b0b0b0 100%);
+    border-bottom: 1px solid #777; padding: 6px 10px; display: flex; align-items: center; height: 26px; z-index: 5;
+}
+.window-header span.close-btn { 
+    border: 1px solid #555; width: 12px; height: 12px; margin-right: 10px;
+    background: #ddd; box-shadow: inset 1px 1px 1px #fff; cursor: pointer; border-radius: 2px;
+}
+.title-container { margin: 0 auto; display: flex; align-items: center; gap: 8px; font-size: 16px; text-shadow: 0 1px 0 #fff; letter-spacing: 0.5px;}
+.window-title { font-weight: 700; color: #222; text-transform: uppercase; letter-spacing: 1px; }
+.separator { color: #888; }
+.user-display { font-weight: 600; color: #00457a; font-size: 15px;}
+
+.quota-badge {
+    position: absolute; right: 10px; font-size: 14px; background: #fdfdfd; padding: 3px 10px; 
+    border: 1px solid #666; border-radius: 5px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.15); 
+    color: #333; display: flex; gap: 5px; align-items: center; font-weight: 600;
+}
+#quota-count { font-weight: 700; color: #008000; font-size: 15px; }
+
+/* TABS */
+.tab-bar {
+    display: flex; padding: 6px 15px 0 15px; background: #ccc; border-bottom: 1px solid #999; gap: 2px;
+    box-shadow: inset 0 5px 10px rgba(0,0,0,0.05);
+}
+.tab-btn {
+    border: 1px solid #888; border-bottom: none; border-radius: 5px 5px 0 0; padding: 7px 15px;
+    font-size: 15px; background: linear-gradient(to bottom, #ddd, #bbb); color: #555; cursor: pointer;
+    position: relative; top: 1px; font-family: 'Rajdhani', sans-serif; font-weight: 600; text-transform: uppercase;
+}
+.tab-btn.active {
+    background: #e8e8e8; color: #000; font-weight: 700; border-bottom: 1px solid #e8e8e8; z-index: 2; padding-bottom: 8px;
+}
+
+.window-content { padding: 25px; flex: 1; overflow-y: auto; background: #e8e8e8; position: relative; text-align: left; }
+.tab-pane { display: none; animation: fadeIn 0.3s ease; }
+.tab-pane.active { display: block; }
+.window-footer-status {
+    border-top: 1px solid #999; background: linear-gradient(to bottom, #eee, #ccc);
+    padding: 4px 15px; font-size: 14px; color: #444; font-family: 'Rajdhani', sans-serif; height: 20px; display: flex; align-items: center; font-weight: 600;
+}
+
+/* --- TIPOGRAFÍA AJUSTADA --- */
+.control-group { margin-bottom: 18px; text-align: left; }
+
+/* 1. TÍTULOS */
+.mac-label, .mac-fieldset legend { 
+    display: block; 
+    font-size: 17px; 
+    font-weight: 700; 
+    margin-bottom: 6px; 
+    color: #333; 
+    text-shadow: 0 1px 0 #fff;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.mac-input, .mac-textarea {
+    width: 97%; border: 1px solid #888; border-top-color: #666;
+    box-shadow: inset 1px 1px 3px rgba(0,0,0,0.15); padding: 8px;
+    font-family: 'Rajdhani', sans-serif; font-size: 16px; font-weight: 500; background: #fff;
+    line-height: 1.4;
+}
+.mac-textarea { height: 100px; resize: vertical; }
+.mac-textarea.small { height: 50px; }
+
+/* 2. OPCIONES */
+.radio-group-container { 
+    margin-bottom: 5px; 
+    font-size: 15px; 
+    color: #333;
+    font-weight: 600;
+}
+.radio-group-container label {
+    margin-right: 15px;
+    cursor: pointer;
+}
+
+/* OTROS ELEMENTOS */
+.status-led {
+    display: inline-block; width: 12px; height: 12px; border-radius: 50%;
+    background: #ccc; border: 1px solid #888; box-shadow: inset 1px 1px 2px rgba(0,0,0,0.3);
+    vertical-align: middle; margin-left: 8px; transition: all 0.3s ease;
+}
+.status-led.active {
+    background: #4cd964; box-shadow: 0 0 5px #4cd964, inset -1px -1px 3px rgba(0,0,0,0.2); border-color: #2a8f3d;
+}
+
+.custom-file-row { display: flex; align-items: center; }
+.mac-btn-glossy {
+    display: inline-block; background: linear-gradient(to bottom, #fff 0%, #f1f1f1 50%, #e1e1e1 51%, #f6f6f6 100%);
+    border: 1px solid #888; border-radius: 4px; padding: 4px 12px; font-size: 14px; color: #333;
+    cursor: pointer; font-weight: 700; box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    font-family: 'Rajdhani', sans-serif; text-transform: uppercase; letter-spacing: 0.5px;
+}
+.mac-btn-glossy:hover { background: linear-gradient(to bottom, #fff 0%, #e1e1e1 50%, #d1d1d1 51%, #e6e6e6 100%); }
+.mac-btn-glossy:active { box-shadow: inset 0 1px 3px rgba(0,0,0,0.3); background: #ddd; }
+.mac-btn-small {
+    display: inline-block; background: linear-gradient(#fff, #ddd); border: 1px solid #888;
+    padding: 3px 10px; font-size: 13px; border-radius: 3px; cursor: pointer; color: #333;
+    box-shadow: 0 1px 1px rgba(0,0,0,0.1); margin-left: 5px;
+    font-family: 'Rajdhani', sans-serif; font-weight: 600; text-transform: uppercase;
+}
+.mac-btn-primary {
+    background: linear-gradient(to bottom, #73c6ff 0%, #0076d1 50%, #005a9e 100%);
+    border: 1px solid #00457a; color: white; padding: 8px 25px; border-radius: 15px;
+    font-size: 16px; cursor: pointer; width: 100%; box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    text-shadow: 0 -1px 0 rgba(0,0,0,0.3); font-weight: 700; margin-top: 10px;
+    font-family: 'Rajdhani', sans-serif; letter-spacing: 1px; text-transform: uppercase;
+}
+.mac-btn-primary:active { background: #00457a; box-shadow: inset 0 2px 5px rgba(0,0,0,0.4); }
+
+.file-name-display { font-size: 14px; color: #444; margin-left: 10px; font-style: italic; }
+.mac-fieldset { border: 1px groove #fff; padding: 10px; margin-bottom: 15px; background: rgba(255,255,255,0.3); }
+.mac-fieldset legend { font-size: 16px; color: #555; font-weight: 700; text-transform: uppercase; }
+.info-btn { 
+    background: #4A90E2; color: white; border-radius: 50%; width: 18px; height: 18px; 
+    font-size: 12px; line-height: 12px; cursor: pointer; border: 1px solid #215990; 
+    padding: 0; margin-left: 5px; font-family: monospace; font-weight: bold;
+}
+
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); z-index: 100; display: flex; justify-content: center; align-items: center; }
+.mini-window { width: 350px; height: auto; border: 1px solid #666; box-shadow: 0 10px 25px rgba(0,0,0,0.5); background: #e8e8e8; display: flex; flex-direction: column;}
+.modal-content { padding: 15px; text-align: center; background: #e8e8e8; }
+.code-example { background: #fff; border: 1px inset #ccc; padding: 5px; font-family: 'Rajdhani', sans-serif; font-size: 14px; margin-top:10px; }
+.code-box { width: 95%; height: 60px; font-family: 'Rajdhani', sans-serif; font-size: 13px; border: 1px inset #ccc; padding: 5px; }
+.step-box { background: #f4f4f4; border: 1px solid #bbb; padding: 10px; margin-bottom: 8px; border-radius: 4px; }
+.config-title { font-size: 16px; margin-top: 0; border-bottom: 1px solid #ccc; padding-bottom: 5px; color: #333; font-weight:700; text-transform: uppercase; }
+.mac-progress-track { width: 100%; height: 16px; border: 1px solid #666; background: #fff; box-shadow: inset 1px 1px 2px rgba(0,0,0,0.2); margin-top: 5px; position: relative; overflow: hidden; }
+.mac-progress-bar { height: 100%; width: 0%; border-right: 1px solid #444; background-image: repeating-linear-gradient(-45deg, #5a9bd6, #5a9bd6 10px, #8abdea 10px, #8abdea 20px); background-size: 28px 28px; animation: barberpole 1s linear infinite; transition: width 0.3s ease; }
+@keyframes barberpole { from { background-position: 0 0; } to { background-position: 28px 0; } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* --- WIZARD / IMÁGENES AJUSTADAS --- */
+.wizard-img {
+    max-width: 98%; 
+    max-height: 180px; 
+    width: auto;
+    border-radius: 5px; border: 1px solid #aaa; 
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2); margin: 5px auto; display: block;
+    object-fit: contain; 
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+.wizard-img:hover { transform: scale(1.02); }
+
+.wizard-nav {
+    display: flex; justify-content: space-between; margin-top: 8px; border-top: 1px solid #ddd; padding-top: 5px;
+}
+.wizard-nav.right { justify-content: flex-end; }
+
+/* --- MODAL ZOOM CON MARCO MAC --- */
+.modal-overlay-local {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6); 
+    backdrop-filter: blur(2px);
+    z-index: 300; 
+    display: flex; justify-content: center; align-items: center;
+}
+
+.mac-popup-window {
+    background: #ececec;
+    border-radius: 8px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.7);
+    width: fit-content; 
+    height: fit-content;
+    max-width: 95%; 
+    max-height: 95%;
+    display: flex; flex-direction: column;
+    border: 1px solid #aaa;
+    overflow: hidden; 
+}
+
+.mac-popup-header {
+    background: linear-gradient(to bottom, #f0f0f0, #dcdcdc);
+    border-bottom: 1px solid #ccc;
+    height: 28px;
+    display: flex; align-items: center;
+    padding: 0 10px;
+    position: relative;
+    flex-shrink: 0; 
+    min-width: 200px;
+}
+
+.mac-traffic-lights { display: flex; gap: 6px; }
+.mac-dot { width: 12px; height: 12px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.15); }
+
+/* BOTONES SEMÁFORO POP-UP */
+.mac-dot.red { background-color: #ff5f56; cursor: pointer; transition: all 0.2s ease; }
+.mac-dot.red:hover { 
+    background-color: #ff3b30; 
+    box-shadow: 0 0 8px rgba(255, 95, 86, 0.8); 
+    filter: brightness(1.2); 
+} 
+.mac-dot.yellow { background-color: #ffbd2e; opacity: 0.3; cursor: default; }
+.mac-dot.green { background-color: #27c93f; opacity: 0.3; cursor: default; }
+
+.mac-popup-title {
+    position: absolute; left: 0; right: 0; text-align: center;
+    font-size: 14px; color: #444; font-weight: 700; pointer-events: none;
+    text-shadow: 0 1px 0 #fff; letter-spacing: 0.5px;
+}
+
+.mac-popup-body {
+    background: #fff;
+    padding: 0;
+    flex: 1 1 auto;
+    display: flex; 
+    justify-content: center; 
+    align-items: center;
+    overflow: hidden;
+    position: relative;
+}
+
+.mac-popup-body img {
+    display: block;
+    max-width: 100%;
+    max-height: 520px; 
+    width: auto;
+    height: auto;
+    object-fit: contain; 
+}
+
+/* --- LISTA DE ARCHIVOS (ICONOS) --- */
+.file-grid { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+.file-chip {
+    display: flex; align-items: center; padding: 4px 8px; 
+    border-radius: 4px; font-size: 13px; color: white;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.2); max-width: 150px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    font-family: 'Rajdhani', sans-serif; font-weight: 600;
+}
+.file-chip.pdf { background: #d9534f; border: 1px solid #c9302c; }
+.file-chip.xls, .file-chip.xlsx, .file-chip.csv { background: #5cb85c; border: 1px solid #4cae4c; }
+.file-chip.doc, .file-chip.docx { background: #0275d8; border: 1px solid #025aa5; }
+.file-chip.img { background: #9c27b0; border: 1px solid #7b1fa2; }
+.file-chip.default { background: #777; border: 1px solid #555; }
+.file-icon-char { margin-right: 5px; font-weight: bold; font-size: 13px; }
