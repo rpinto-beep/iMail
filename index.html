@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Automatización Gráfica</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="loader" class="loader-overlay">
+    <div class="spinner-border text-primary" style="width: 4rem; height: 4rem;" role="status"></div>
+    <h3 class="mt-3 text-primary fw-bold">Procesando datos...</h3>
+</div>
+
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 10005;">
+    <div id="customToast" class="toast align-items-center text-white bg-danger border-0 shadow-lg" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000">
+        <div class="d-flex">
+            <div class="toast-body fw-bold fs-6" id="customToastMessage">
+                Mensaje de notificación
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+
+<div id="presentationOverlay" class="presentation-overlay" style="display: none;">
+    <div class="presentation-header bg-white px-3 py-2 rounded shadow-sm mb-3">
+        <span id="slideCounter" class="badge bg-primary fs-6">Slide 1 / 10</span>
+        <button class="btn btn-danger fw-bold shadow-sm" onclick="window.cerrarPresentacion()">🗙 Salir de Presentación</button>
+    </div>
+    
+    <div id="slideContent" class="slide-content">
+        </div>
+
+    <div class="presentation-controls">
+        <button class="btn btn-dark rounded-circle me-3 shadow presentation-btn" onclick="window.prevSlide()">&#10094;</button>
+        <button class="btn btn-dark rounded-circle shadow presentation-btn" onclick="window.nextSlide()">&#10095;</button>
+    </div>
+</div>
+
+<div class="container-fluid" id="mainAppContainer">
+    <h2 class="mb-4 mt-3 text-center fw-bold text-dark">Automatización Gráfica</h2>
+
+    <ul class="nav nav-tabs fw-bold" id="mainTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="creccu-vig-tab" data-bs-toggle="tab" data-bs-target="#creccu-vig" type="button" role="tab" aria-controls="creccu-vig" aria-selected="true">Creccu Vig</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="creccu-1edc-tab" data-bs-toggle="tab" data-bs-target="#creccu-1edc" type="button" role="tab" aria-controls="creccu-1edc" aria-selected="false">Creccu 1EDC</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link text-warning" id="ppt-tab" data-bs-toggle="tab" data-bs-target="#ppt" type="button" role="tab" aria-controls="ppt" aria-selected="false">Presentación Web</button>
+        </li>
+    </ul>
+
+    <div class="tab-content mt-4" id="mainTabsContent">
+        
+        <div class="tab-pane fade show active" id="creccu-vig" role="tabpanel" aria-labelledby="creccu-vig-tab">
+            
+            <div class="card p-4 text-center mb-4 shadow-sm position-relative">
+                <button class="btn btn-outline-info rounded-circle position-absolute top-0 end-0 m-3 fw-bold" style="width: 40px; height: 40px;" data-bs-toggle="modal" data-bs-target="#modalAyudaFormato" title="Ver formato esperado">?</button>
+                
+                <h5>Cargar archivo base (XLSX o CSV) para Creccu Vig</h5>
+                <input type="file" id="fileInput" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" class="form-control w-50 mx-auto mt-2">
+                
+                <div class="mt-3">
+                    <button class="btn btn-danger me-2 fw-bold shadow-sm" onclick="window.descargarPDF()" id="btnPdf" disabled>📄 Descargar PDF</button>
+                    <button class="btn btn-success fw-bold shadow-sm" onclick="window.descargarExcel()" id="btnExcel" disabled>📊 Descargar Excel</button>
+                </div>
+            </div>
+
+            <div id="dashboardCarousel" class="carousel slide card p-4 shadow" data-bs-ride="false" data-bs-interval="false">
+                
+                <div class="carousel-indicators custom-indicators">
+                    <button type="button" data-bs-target="#dashboardCarousel" data-bs-slide-to="0" class="active bg-primary" aria-current="true"></button>
+                    <button type="button" data-bs-target="#dashboardCarousel" data-bs-slide-to="1" class="bg-success"></button>
+                    <button type="button" data-bs-target="#dashboardCarousel" data-bs-slide-to="2" class="bg-dark"></button>
+                </div>
+
+                <div class="carousel-inner px-5 pb-4">
+                    
+                    <div class="carousel-item active transition-custom">
+                        <div class="d-flex justify-content-center align-items-center mb-3 position-relative">
+                            <h3 class="text-primary fw-bold mb-0">Resumen por Zonas</h3>
+                            <button class="btn btn-sm btn-outline-primary position-absolute end-0 shadow-sm fw-bold" onclick="toggleTable('tablaZonasContainer', this)">
+                                🗙 Ocultar Tabla (Expandir Gráfica)
+                            </button>
+                        </div>
+                        <div class="table-container mb-4" id="tablaZonasContainer">
+                            <table class="table table-striped table-hover text-center" id="tablaZonas">
+                                <thead></thead><tbody></tbody>
+                            </table>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="graficoZonas"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="carousel-item transition-custom">
+                        <div class="d-flex justify-content-center align-items-center mb-3 position-relative">
+                            <h3 class="text-success fw-bold mb-0">Resumen por Ejecutivos</h3>
+                            <button class="btn btn-sm btn-outline-success position-absolute end-0 shadow-sm fw-bold" onclick="toggleTable('tablaEjecutivosContainer', this)">
+                                🗙 Ocultar Tabla (Expandir Gráfica)
+                            </button>
+                        </div>
+                        <div class="table-container mb-4" id="tablaEjecutivosContainer">
+                            <table class="table table-striped table-hover text-center" id="tablaEjecutivos">
+                                <thead></thead><tbody></tbody>
+                            </table>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="graficoEjecutivos"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="carousel-item transition-custom">
+                        <h3 class="text-center text-dark mb-4 fw-bold">Resumen Tabla (Vista Limpia)</h3>
+                        <div class="table-container mb-4" id="tablaLimpia">
+                            <table class="table table-striped table-hover text-center" id="tablaLimpiaGestor">
+                                <thead></thead><tbody></tbody>
+                            </table>
+                            <table class="table table-striped table-hover text-center mt-5" id="tablaLimpiaZona">
+                                <thead></thead><tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+
+                <button class="carousel-control-prev custom-arrow" type="button" data-bs-target="#dashboardCarousel" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon shadow rounded-circle bg-dark p-3" aria-hidden="true"></span>
+                    <span class="visually-hidden">Anterior</span>
+                </button>
+                <button class="carousel-control-next custom-arrow" type="button" data-bs-target="#dashboardCarousel" data-bs-slide="next">
+                    <span class="carousel-control-next-icon shadow rounded-circle bg-dark p-3" aria-hidden="true"></span>
+                    <span class="visually-hidden">Siguiente</span>
+                </button>
+            </div>
+
+        </div>
+
+        <div class="tab-pane fade" id="creccu-1edc" role="tabpanel" aria-labelledby="creccu-1edc-tab">
+            <div class="card p-4 text-center mb-4 shadow-sm position-relative">
+                <button class="btn btn-outline-info rounded-circle position-absolute top-0 end-0 m-3 fw-bold" style="width: 40px; height: 40px;" data-bs-toggle="modal" data-bs-target="#modalAyudaFormato1EDC" title="Ver formato esperado">?</button>
+                
+                <h5>Cargar archivo base (XLSX o CSV) para Creccu 1EDC</h5>
+                <input type="file" id="fileInput1EDC" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" class="form-control w-50 mx-auto mt-2">
+                
+                <div class="mt-3">
+                    <button class="btn btn-danger me-2 fw-bold shadow-sm" onclick="window.descargarPDF1EDC()" id="btnPdf1EDC" disabled>📄 Descargar PDF</button>
+                    <button class="btn btn-success fw-bold shadow-sm" onclick="window.descargarExcel1EDC()" id="btnExcel1EDC" disabled>📊 Descargar Excel</button>
+                </div>
+            </div>
+
+            <div id="dashboardCarousel1EDC" class="carousel slide card p-4 shadow" data-bs-ride="false" data-bs-interval="false">
+                
+                <div class="carousel-indicators custom-indicators">
+                    <button type="button" data-bs-target="#dashboardCarousel1EDC" data-bs-slide-to="0" class="active bg-primary" aria-current="true"></button>
+                    <button type="button" data-bs-target="#dashboardCarousel1EDC" data-bs-slide-to="1" class="bg-success"></button>
+                </div>
+
+                <div class="carousel-inner px-5 pb-4">
+                    
+                    <div class="carousel-item active transition-custom">
+                        <div class="d-flex justify-content-center align-items-center mb-3 position-relative">
+                            <h3 class="text-primary fw-bold mb-0">Resumen por Zonas 1EDC</h3>
+                            <button class="btn btn-sm btn-outline-primary position-absolute end-0 shadow-sm fw-bold" onclick="toggleTable('tablaZonas1EDCContainer', this)">
+                                🗙 Ocultar Tabla (Expandir Gráfica)
+                            </button>
+                        </div>
+                        <div class="table-container mb-4" id="tablaZonas1EDCContainer">
+                            <table class="table table-striped table-hover text-center" id="tablaZonas1EDC">
+                                <thead></thead><tbody></tbody>
+                            </table>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="graficoZonas1EDC"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="carousel-item transition-custom">
+                        <div class="d-flex justify-content-center align-items-center mb-3 position-relative">
+                            <h3 class="text-success fw-bold mb-0">Contactabilidad 1EDC</h3>
+                            <button class="btn btn-sm btn-outline-success position-absolute end-0 shadow-sm fw-bold" onclick="toggleTable('tablaContact1EDCContainer', this)">
+                                🗙 Ocultar Tabla (Expandir Gráfica)
+                            </button>
+                        </div>
+                        <div class="row text-center mb-4" id="cardsContact1EDC">
+                            </div>
+                        <div class="table-container mb-4" id="tablaContact1EDCContainer">
+                            <table class="table table-striped table-hover text-center" id="tablaContact1EDC">
+                                <thead></thead><tbody></tbody>
+                            </table>
+                        </div>
+                        <div class="chart-container" style="height: 400px;">
+                            <canvas id="graficoContact1EDC"></canvas>
+                        </div>
+                    </div>
+
+                </div>
+
+                <button class="carousel-control-prev custom-arrow" type="button" data-bs-target="#dashboardCarousel1EDC" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon shadow rounded-circle bg-dark p-3" aria-hidden="true"></span>
+                    <span class="visually-hidden">Anterior</span>
+                </button>
+                <button class="carousel-control-next custom-arrow" type="button" data-bs-target="#dashboardCarousel1EDC" data-bs-slide="next">
+                    <span class="carousel-control-next-icon shadow rounded-circle bg-dark p-3" aria-hidden="true"></span>
+                    <span class="visually-hidden">Siguiente</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="ppt" role="tabpanel" aria-labelledby="ppt-tab">
+            <div class="card p-4 shadow-sm">
+                <h3 class="fw-bold text-dark mb-4 border-bottom pb-2">Configuración de Presentación Web</h3>
+                <p class="text-muted mb-4">Selecciona las gráficas, tablas y fondos que deseas exponer en la presentación a pantalla completa.</p>
+
+                <h4 class="fw-bold text-primary mb-3 mt-2 border-bottom pb-2"><i class="fas fa-image me-2"></i>Fondos de Presentación</h4>
+                <div class="row mb-5">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold text-dark d-block">Portada y Fin:</label>
+                        <div class="d-flex gap-2 bg-selector-group flex-wrap">
+                            <label class="bg-selector" title="Fondo 1">
+                                <input type="radio" name="bgCoverEnd" value="modules/PPT/fondo1.png" checked>
+                                <img src="modules/PPT/fondo1.png" alt="Fondo 1" class="img-thumbnail shadow-sm" onerror="this.src='https://via.placeholder.com/80x45?text=Fondo+1'">
+                            </label>
+                            <label class="bg-selector" title="Fondo 2">
+                                <input type="radio" name="bgCoverEnd" value="modules/PPT/fondo2.png">
+                                <img src="modules/PPT/fondo2.png" alt="Fondo 2" class="img-thumbnail shadow-sm" onerror="this.src='https://via.placeholder.com/80x45?text=Fondo+2'">
+                            </label>
+                            <label class="bg-selector" title="Fondo 3">
+                                <input type="radio" name="bgCoverEnd" value="modules/PPT/fondo3.png">
+                                <img src="modules/PPT/fondo3.png" alt="Fondo 3" class="img-thumbnail shadow-sm" onerror="this.src='https://via.placeholder.com/80x45?text=Fondo+3'">
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold text-dark d-block">Títulos de Sección:</label>
+                        <div class="d-flex gap-2 bg-selector-group flex-wrap">
+                            <label class="bg-selector" title="Fondo 1">
+                                <input type="radio" name="bgTitles" value="modules/PPT/fondo1.png">
+                                <img src="modules/PPT/fondo1.png" alt="Fondo 1" class="img-thumbnail shadow-sm" onerror="this.src='https://via.placeholder.com/80x45?text=Fondo+1'">
+                            </label>
+                            <label class="bg-selector" title="Fondo 2">
+                                <input type="radio" name="bgTitles" value="modules/PPT/fondo2.png" checked>
+                                <img src="modules/PPT/fondo2.png" alt="Fondo 2" class="img-thumbnail shadow-sm" onerror="this.src='https://via.placeholder.com/80x45?text=Fondo+2'">
+                            </label>
+                            <label class="bg-selector" title="Fondo 3">
+                                <input type="radio" name="bgTitles" value="modules/PPT/fondo3.png">
+                                <img src="modules/PPT/fondo3.png" alt="Fondo 3" class="img-thumbnail shadow-sm" onerror="this.src='https://via.placeholder.com/80x45?text=Fondo+3'">
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold text-dark d-block">Diapositivas de Info:</label>
+                        <div class="d-flex gap-2 bg-selector-group flex-wrap">
+                            <label class="bg-selector" title="Fondo 1">
+                                <input type="radio" name="bgInfo" value="modules/PPT/fondo1.png">
+                                <img src="modules/PPT/fondo1.png" alt="Fondo 1" class="img-thumbnail shadow-sm" onerror="this.src='https://via.placeholder.com/80x45?text=Fondo+1'">
+                            </label>
+                            <label class="bg-selector" title="Fondo 2">
+                                <input type="radio" name="bgInfo" value="modules/PPT/fondo2.png">
+                                <img src="modules/PPT/fondo2.png" alt="Fondo 2" class="img-thumbnail shadow-sm" onerror="this.src='https://via.placeholder.com/80x45?text=Fondo+2'">
+                            </label>
+                            <label class="bg-selector" title="Fondo 3">
+                                <input type="radio" name="bgInfo" value="modules/PPT/fondo3.png" checked>
+                                <img src="modules/PPT/fondo3.png" alt="Fondo 3" class="img-thumbnail shadow-sm" onerror="this.src='https://via.placeholder.com/80x45?text=Fondo+3'">
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <h4 class="fw-bold text-primary mb-3 border-bottom pb-2"><i class="fas fa-list-check me-2"></i>Contenido a Exportar</h4>
+                
+                <div class="form-check mb-2 mt-3">
+                    <input class="form-check-input" type="checkbox" id="chkModuloVig" onchange="toggleSubchecks('subchecksVig', this)" checked>
+                    <label class="form-check-label fw-bold fs-5 text-dark" for="chkModuloVig">
+                        Creccu Vig
+                    </label>
+                </div>
+                
+                <div id="subchecksVig" class="ms-5 mb-4 p-3 border rounded bg-light" style="display: block; transition: all 0.3s;">
+                    <div class="form-check mb-2">
+                        <input class="form-check-input ppt-slide-option" type="checkbox" id="chkVigZonas" value="vig_zonas" checked>
+                        <label class="form-check-label" for="chkVigZonas">Resumen por zonas</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input ppt-slide-option" type="checkbox" id="chkVigComp" value="vig_comp" checked>
+                        <label class="form-check-label" for="chkVigComp">Comparativo de Faltantes por Zona</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input ppt-slide-option" type="checkbox" id="chkVigExec" value="vig_ejecutivos" checked>
+                        <label class="form-check-label" for="chkVigExec">Resumen por ejecutivos</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input ppt-slide-option" type="checkbox" id="chkVigDrill" value="vig_drill" checked>
+                        <label class="form-check-label" for="chkVigDrill">Drill Down Desglose Ejecutivo</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input ppt-slide-option" type="checkbox" id="chkVigGestor" value="vig_tabla_gestor" checked>
+                        <label class="form-check-label" for="chkVigGestor">Resumen Tabla (Ver por Gestor)</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input ppt-slide-option" type="checkbox" id="chkVigZona" value="vig_tabla_zona" checked>
+                        <label class="form-check-label" for="chkVigZona">Resumen Tabla (Ver por Zona)</label>
+                    </div>
+                </div>
+
+                <div class="form-check mb-2 mt-3">
+                    <input class="form-check-input" type="checkbox" id="chkModulo1EDC" onchange="toggleSubchecks('subchecks1EDC', this)" checked>
+                    <label class="form-check-label fw-bold fs-5 text-dark" for="chkModulo1EDC">
+                        Creccu 1EDC
+                    </label>
+                </div>
+
+                <div id="subchecks1EDC" class="ms-5 mb-4 p-3 border rounded bg-light" style="display: block; transition: all 0.3s;">
+                    <div class="form-check mb-2">
+                        <input class="form-check-input ppt-slide-option" type="checkbox" id="chk1EDCZonas" value="1edc_zonas" checked>
+                        <label class="form-check-label" for="chk1EDCZonas">Resumen por zonas 1EDC</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input ppt-slide-option" type="checkbox" id="chk1EDCContact" value="1edc_contact" checked>
+                        <label class="form-check-label" for="chk1EDCContact">Contactabilidad 1EDC</label>
+                    </div>
+                </div>
+
+                <div class="mt-5 text-center">
+                    <button class="btn btn-primary btn-lg fw-bold shadow px-5 py-3" id="btnGenerarPPT" style="font-size: 1.5rem;">
+                        ▶ INICIAR PRESENTACIÓN WEB
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<div class="modal fade" id="modalAyudaFormato" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header bg-info text-white">
+        <h5 class="modal-title fw-bold">Interpretación de Formato - Creccu Vig</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Para que la lectura de datos sea exitosa, el sistema rastrea dinámicamente las siguientes 3 tablas (generalmente en una hoja llamada <strong>TABLA</strong>):</p>
+        <div class="mb-4 overflow-auto">
+            <h6 class="fw-bold text-primary">📌 Tabla 1 (Asignaciones y Logros)</h6>
+            <table class="table table-bordered table-sm text-center">
+                <thead class="table-light"><tr><th>ZONA EJECUTIVO</th><th>GESTOR / EJECUTIVO</th><th>CUENTA DE RUT (Asignado)</th><th>CUENTA DE ID [DDMM] (Ganados)</th></tr></thead>
+                <tbody><tr><td>1.- NORTE</td><td>MARISELLA</td><td>150</td><td>132</td></tr></tbody>
+            </table>
+        </div>
+        <div class="mb-4 overflow-auto">
+            <h6 class="fw-bold text-primary">📌 Tabla 2 (Metas y Faltantes por Gestor)</h6>
+            <table class="table table-bordered table-sm text-center">
+                <thead class="table-light"><tr><th>GESTOR</th><th>DETALLE POR GESTOR (Zona)</th><th>CUENTA DE RUT (Asignado)</th><th>GANADOS</th><th>FALTA RUT POR PAGAR</th><th>META</th><th>% AVANCE</th><th>META RUT</th></tr></thead>
+                <tbody><tr><td>MARISELLA</td><td>1.- NORTE</td><td>150</td><td>132</td><td>18</td><td>88.1%</td><td>88.0%</td><td>132</td></tr></tbody>
+            </table>
+        </div>
+        <div class="overflow-auto">
+            <h6 class="fw-bold text-primary">📌 Tabla 3 (Porcentajes Exactos por Zona)</h6>
+            <table class="table table-bordered table-sm text-center">
+                <thead class="table-light"><tr><th>DETALLE POR GESTOR / ZONA</th><th>META</th><th>% AVANCE</th><th>FALTANTE</th></tr></thead>
+                <tbody><tr><td>1.- NORTE</td><td>88.1%</td><td>95.2%</td><td>-7.1%</td></tr></tbody>
+            </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Entendido</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="modalAyudaFormato1EDC" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title fw-bold">Interpretación de Formato - Creccu 1EDC</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>El sistema requiere la hoja <strong>TABLA</strong> con las siguientes estructuras:</p>
+        <div class="mb-4 overflow-auto">
+            <h6 class="fw-bold text-success">📌 Tabla 1 (Zonas 1EDC)</h6>
+            <p class="small text-muted mb-1">El sistema escaneará las siguientes columnas:</p>
+            <table class="table table-bordered table-sm text-center">
+                <thead class="table-light"><tr><th>CUENTA DE RUT (Asignado)</th><th>GANADOS</th><th>% AVANCE</th><th>DETALLE POR GESTOR (Zona)</th><th>METAS</th><th>FALTA</th></tr></thead>
+            </table>
+        </div>
+        <div class="mb-4 overflow-auto">
+            <h6 class="fw-bold text-success">📌 Tabla 2 (Contactabilidad)</h6>
+            <p class="small text-muted mb-1">El sistema escaneará las siguientes columnas:</p>
+            <table class="table table-bordered table-sm text-center">
+                <thead class="table-light"><tr><th>ETIQUETAS DE FILA (SIN GESTION, etc.)</th><th>CONTACT. (%)</th><th>CUENTA DE RUT (Valor)</th></tr></thead>
+            </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
+<script>
+    // Función global para disparar la notificación estilo Toast
+    window.mostrarAlerta = function(mensaje, tipo = 'danger') {
+        const toastEl = document.getElementById('customToast');
+        const toastBody = document.getElementById('customToastMessage');
+        toastEl.className = `toast align-items-center text-white bg-${tipo} border-0 shadow-lg`;
+        toastBody.innerText = mensaje;
+        const toast = new bootstrap.Toast(toastEl);
+        toast.show();
+    };
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const carouselEl = document.getElementById('dashboardCarousel');
+        if (carouselEl) {
+            carouselEl.addEventListener('shown.bs.carousel', function () { window.dispatchEvent(new Event('resize')); });
+        }
+        const carousel1EDC = document.getElementById('dashboardCarousel1EDC');
+        if (carousel1EDC) {
+            carousel1EDC.addEventListener('shown.bs.carousel', function () { window.dispatchEvent(new Event('resize')); });
+        }
+        const mainTabs = document.querySelectorAll('button[data-bs-toggle="tab"]');
+        mainTabs.forEach(tab => {
+            tab.addEventListener('shown.bs.tab', function () { window.dispatchEvent(new Event('resize')); });
+        });
+    });
+
+    function toggleTable(containerId, btn) {
+        const container = document.getElementById(containerId);
+        if (container.style.display === 'none') {
+            container.style.display = 'block';
+            btn.innerHTML = '🗙 Ocultar Tabla (Expandir Gráfica)';
+            if(btn.classList.contains('btn-primary')) btn.classList.replace('btn-primary', 'btn-outline-primary');
+            else btn.classList.replace('btn-success', 'btn-outline-success');
+        } else {
+            container.style.display = 'none';
+            btn.innerHTML = '⬇ Mostrar Tabla';
+            if(btn.classList.contains('btn-outline-primary')) btn.classList.replace('btn-outline-primary', 'btn-primary');
+            else btn.classList.replace('btn-outline-success', 'btn-success');
+        }
+        setTimeout(() => window.dispatchEvent(new Event('resize')), 100);
+    }
+
+    function toggleSubchecks(targetId, checkbox) {
+        const div = document.getElementById(targetId);
+        if (checkbox.checked) {
+            div.style.display = 'block';
+            const childChecks = div.querySelectorAll('.form-check-input');
+            childChecks.forEach(chk => chk.checked = true);
+        } else {
+            div.style.display = 'none';
+            const childChecks = div.querySelectorAll('.form-check-input');
+            childChecks.forEach(chk => chk.checked = false);
+        }
+    }
+</script>
+
+<script type="module" src="main.js"></script>
+</body>
+</html>
